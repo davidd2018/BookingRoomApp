@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "818221643846",
+    "project_id": "david-523db",
+    "storage_bucket": "david-523db.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:818221643846:android:68bb179887bec70aa2b247",
+        "android_client_info": {
+          "package_name": "com.example.roombookingapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcgpc2gS2ggoc2W2fCXqAQQPX49BgloYo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
