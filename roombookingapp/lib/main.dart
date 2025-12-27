@@ -30,8 +30,12 @@ void main() async {
         ),
       );
     } else if (Platform.isAndroid || Platform.isIOS) {
-      // For mobile platforms
+      // For mobile platforms (Android/iOS)
+      // Firebase will automatically read configuration from:
+      // - android/app/google-services.json (for Android)
+      // - ios/Runner/GoogleService-Info.plist (for iOS)
       await Firebase.initializeApp();
+      debugPrint('Firebase initialized successfully for ${Platform.isAndroid ? "Android" : "iOS"}');
     }
   } catch (e) {
     debugPrint('Firebase initialization error: $e');
