@@ -441,23 +441,15 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
-              // MoMo Payment Option
+
               _buildPaymentOption(
                 'MoMo',
-                'assets/images/momo/z7376076909268_72755f748f2bc6dd730aa8e8fd660886.jpg',
+                'lib/assets/images/momo/logo512.webp',
                 'momo',
               ),
-              const SizedBox(height: 16),
-              
-              // VCB Payment Option
-              _buildPaymentOption(
-                'Vietcombank (VCB)',
-                'assets/images/vcb/z7376095976876_2257b3cb649d1e7c59ed9b144ed29878.jpg',
-                'vcb',
-              ),
+
               const SizedBox(height: 32),
-              
+
               // Show QR Code or Payment Button
               if (!_showQRCode)
                 // Initial button to show QR code
@@ -487,106 +479,6 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                 // QR Code Display Section
                 Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            _selectedPaymentMethod == 'momo'
-                                ? 'Quét QR code MoMo để thanh toán'
-                                : 'Quét QR code Vietcombank để thanh toán',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E3A8A),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Số tiền: ${_formatPrice(widget.totalPrice)}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          // Large QR Code
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.grey[300]!,
-                                width: 2,
-                              ),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(
-                                _selectedPaymentMethod == 'momo'
-                                    ? 'assets/images/momo/z7376076909268_72755f748f2bc6dd730aa8e8fd660886.jpg'
-                                    : 'assets/images/vcb/z7376095976876_2257b3cb649d1e7c59ed9b144ed29878.jpg',
-                                width: 250,
-                                height: 250,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    width: 250,
-                                    height: 250,
-                                    color: Colors.grey[200],
-                                    child: const Icon(
-                                      Icons.qr_code,
-                                      size: 100,
-                                      color: Colors.grey,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1E3A8A).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  color: Colors.blue[700],
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Vui lòng quét QR code bằng ứng dụng ${_selectedPaymentMethod == 'momo' ? 'MoMo' : 'Vietcombank'} để thanh toán. Sau khi thanh toán thành công, nhấn nút "Đã thanh toán" bên dưới.',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.blue[900],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                     const SizedBox(height: 24),
                     // Confirm Payment Button
                     SizedBox(
@@ -625,6 +517,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+
                     // Back button
                     TextButton(
                       onPressed: () {
