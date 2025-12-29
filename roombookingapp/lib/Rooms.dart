@@ -33,6 +33,23 @@ class _RoomsScreenState extends State<RoomsScreen> {
     return status == 'available' ? Colors.green : Colors.red;
   }
 
+  // Show booking dialog
+  void _showBookingDialog(
+    BuildContext context,
+    String roomId,
+    int price,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return BookingDialog(
+          roomId: roomId,
+          price: price,
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -281,8 +298,12 @@ class _RoomsScreenState extends State<RoomsScreen> {
                                       if (roomStatus == 'available')
                                         ElevatedButton(
                                           onPressed: () {
-                                            // Handle booking
-                                            // TODO: Navigate to booking screen
+                                            // Show booking dialog
+                                            _showBookingDialog(
+                                              context,
+                                              roomId,
+                                              price,
+                                            );
                                           },
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor:
@@ -319,6 +340,366 @@ class _RoomsScreenState extends State<RoomsScreen> {
               },
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+// Booking Dialog Widget
+class BookingDialog extends StatefulWidget {
+  final String roomId;
+  final int price;
+
+  const BookingDialog({
+    super.key,
+    required this.roomId,
+    required this.price,
+  });
+
+  @override
+  State<BookingDialog> createState() => _BookingDialogState();
+}
+
+class _BookingDialogState extends State<BookingDialog> {
+  int _numberOfDays = 1;
+  int _numberOfRooms = 1;
+
+  String _formatPrice(int price) {
+    return '${(price / 1000).toStringAsFixed(0)}k VNĐ';
+  }
+
+  int _calculateTotalPrice() {
+    return widget.price * _numberOfDays * _numberOfRooms;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        padding: const EdgeInsets.all(20),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Thông tin đặt phòng',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E3A8A),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.grey),
+                    onPressed: () => Navigator.of(context).pop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Phòng: ${widget.roomId}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Number of Days Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(
+                    child: Text(
+                      'Số ngày đặt',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E3A8A),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Decrease button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: _numberOfDays > 1
+                              ? const Color(0xFF1E3A8A)
+                              : Colors.grey[300],
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.remove, color: Colors.white, size: 20),
+                          onPressed: _numberOfDays > 1
+                              ? () {
+                                  setState(() {
+                                    _numberOfDays--;
+                                  });
+                                }
+                              : null,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Number display
+                      Container(
+                        width: 50,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '$_numberOfDays',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E3A8A),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Increase button
+                      Container(
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF1E3A8A),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                          onPressed: () {
+                            setState(() {
+                              _numberOfDays++;
+                            });
+                          },
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              // Number of Rooms Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(
+                    child: Text(
+                      'Số phòng đặt',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E3A8A),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Decrease button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: _numberOfRooms > 1
+                              ? const Color(0xFF1E3A8A)
+                              : Colors.grey[300],
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.remove, color: Colors.white, size: 20),
+                          onPressed: _numberOfRooms > 1
+                              ? () {
+                                  setState(() {
+                                    _numberOfRooms--;
+                                  });
+                                }
+                              : null,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Number display
+                      Container(
+                        width: 50,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '$_numberOfRooms',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E3A8A),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Increase button
+                      Container(
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF1E3A8A),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                          onPressed: () {
+                            setState(() {
+                              _numberOfRooms++;
+                            });
+                          },
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              // Price Summary
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E3A8A).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Tổng tiền',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1E3A8A),
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        _formatPrice(_calculateTotalPrice()),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E3A8A),
+                        ),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Action Buttons
+              Row(
+                children: [
+                  // Cancel button
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                          color: Color(0xFF1E3A8A),
+                          width: 2,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Hủy',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1E3A8A),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Confirm button
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // TODO: Handle booking confirmation
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Đã đặt $_numberOfRooms phòng trong $_numberOfDays ngày',
+                            ),
+                            backgroundColor: Colors.green,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1E3A8A),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: const Text(
+                        'Xác nhận',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
