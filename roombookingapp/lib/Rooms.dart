@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'PaymentMethod.dart';
+import 'user_session.dart';
 
 class RoomsScreen extends StatefulWidget {
   final String hotelId;
@@ -38,6 +40,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
     BuildContext context,
     String roomId,
     int price,
+    String roomDocId,
   ) {
     showDialog(
       context: context,
@@ -45,6 +48,8 @@ class _RoomsScreenState extends State<RoomsScreen> {
         return BookingDialog(
           roomId: roomId,
           price: price,
+          hotelId: widget.hotelId,
+          roomDocId: roomDocId,
         );
       },
     );
@@ -273,56 +278,67 @@ class _RoomsScreenState extends State<RoomsScreen> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Giá phòng',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[600],
+                                      Flexible(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Giá phòng',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
                                             ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _formatPrice(price),
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFF1E3A8A),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              _formatPrice(price),
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF1E3A8A),
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                       if (roomStatus == 'available')
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            // Show booking dialog
-                                            _showBookingDialog(
-                                              context,
-                                              roomId,
-                                              price,
-                                            );
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                const Color(0xFF1E3A8A),
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 20,
-                                              vertical: 10,
-                                            ),
-                                          ),
-                                          child: const Text(
-                                            'Đặt phòng',
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
+                                        Flexible(
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(left: 8.0),
+                                            child: ElevatedButton(
+                                              onPressed: () {
+                                                // Show booking dialog
+                                                _showBookingDialog(
+                                                  context,
+                                                  roomId,
+                                                  price,
+                                                  roomDoc.id,
+                                                );
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    const Color(0xFF1E3A8A),
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 16,
+                                                  vertical: 10,
+                                                ),
+                                                minimumSize: Size.zero,
+                                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                              ),
+                                              child: const Text(
+                                                'Đặt phòng',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -350,11 +366,15 @@ class _RoomsScreenState extends State<RoomsScreen> {
 class BookingDialog extends StatefulWidget {
   final String roomId;
   final int price;
+  final String hotelId;
+  final String roomDocId;
 
   const BookingDialog({
     super.key,
     required this.roomId,
     required this.price,
+    required this.hotelId,
+    required this.roomDocId,
   });
 
   @override
@@ -667,15 +687,35 @@ class _BookingDialogState extends State<BookingDialog> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Handle booking confirmation
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Đã đặt $_numberOfRooms phòng trong $_numberOfDays ngày',
+                        final userEmail = UserSession.getUserEmail();
+                        if (userEmail == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Vui lòng đăng nhập để đặt phòng'),
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
                             ),
-                            backgroundColor: Colors.green,
-                            behavior: SnackBarBehavior.floating,
+                          );
+                          Navigator.of(context).pop();
+                          return;
+                        }
+
+                        final totalPrice = widget.price * _numberOfDays * _numberOfRooms;
+                        
+                        // Close dialog and navigate to payment method
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PaymentMethodScreen(
+                              userEmail: userEmail,
+                              hotelId: widget.hotelId,
+                              roomId: widget.roomId,
+                              numberOfDays: _numberOfDays,
+                              numberOfRooms: _numberOfRooms,
+                              totalPrice: totalPrice,
+                              roomDocId: widget.roomDocId,
+                            ),
                           ),
                         );
                       },

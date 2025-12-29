@@ -9,6 +9,7 @@ import 'register.dart';
 import 'Home.dart';
 import 'init_locations.dart';
 import 'init_hotels.dart';
+import 'user_session.dart';
 
 
 void main() async {
@@ -173,6 +174,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Login successful - navigate to Home screen
       if (mounted) {
+        // Save user email to session
+        final userEmail = _emailController.text.trim().toLowerCase();
+        UserSession.setUserEmail(userEmail);
+        
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
