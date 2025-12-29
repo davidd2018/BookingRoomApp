@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'momo_payment_service.dart';
 
 class PaymentMethodScreen extends StatefulWidget {
   final String userEmail;
@@ -30,16 +32,46 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? _selectedPaymentMethod;
   bool _isProcessing = false;
-  bool _showQRCode = false; // Track if QR code is shown
   String? _paymentHistoryId; // Track payment history ID for monitoring
   StreamSubscription<DocumentSnapshot>? _paymentSubscription; // Monitor payment status
   bool _paymentSuccessDialogShown = false; // Prevent multiple dialogs
+
+  @override
+  void initState() {
+    super.initState();
+    // Kiểm tra nếu có paymentHistoryId đang pending, tiếp tục monitor
+    _checkPendingPayments();
+  }
+
+  Future<void> _checkPendingPayments() async {
+    // Kiểm tra các payment đang pending của user này
+    try {
+      // Sử dụng query đơn giản hơn để tránh lỗi index
+      final pendingPayments = await _firestore
+          .collection('PaymentHistory')
+          .where('status', isEqualTo: 'pending')
+          .where('userEmail', isEqualTo: widget.userEmail)
+          .limit(1)
+          .get();
+
+      if (pendingPayments.docs.isNotEmpty) {
+        final paymentDoc = pendingPayments.docs.first;
+        _paymentHistoryId = paymentDoc.id;
+        _startPaymentMonitoring(paymentDoc.id);
+      }
+    } catch (e) {
+      // Chỉ log lỗi, không hiển thị cho user vì đây là background check
+      debugPrint('Error checking pending payments: $e');
+      // Nếu có lỗi index, bỏ qua việc check pending payments
+    }
+  }
 
   String _formatPrice(int price) {
     return '${(price / 1000).toStringAsFixed(0)}k VNĐ';
   }
 
-  void _showQRCodeScreen() {
+
+  Future<void> _confirmPayment() async {
     if (_selectedPaymentMethod == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -51,13 +83,13 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       return;
     }
 
-    setState(() {
-      _showQRCode = true;
-    });
-  }
+    // Nếu chọn MoMo, gọi MoMo Payment API
+    if (_selectedPaymentMethod == 'momo') {
+      await _processMoMoPayment();
+      return;
+    }
 
-  Future<void> _confirmPayment() async {
-    // Show confirmation dialog
+    // Các phương thức thanh toán khác (giữ nguyên logic cũ)
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -103,6 +135,218 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     }
   }
 
+  Future<void> _manualConfirmPayment() async {
+    if (_paymentHistoryId == null) return;
+
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      // Cập nhật trạng thái thanh toán thành 'confirmed'
+      await _firestore
+          .collection('PaymentHistory')
+          .doc(_paymentHistoryId)
+          .update({
+        'status': 'confirmed',
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đang xử lý thanh toán...'),
+            backgroundColor: Colors.blue,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _processMoMoPayment() async {
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      // Tạo orderId duy nhất
+      final orderId = 'ORDER_${DateTime.now().millisecondsSinceEpoch}';
+      final orderInfo = 'Thanh toán đặt phòng ${widget.roomId} - ${widget.numberOfRooms} phòng x ${widget.numberOfDays} ngày';
+      final extraData = '';
+
+      // Gọi MoMo Payment API
+      final result = await MoMoPaymentService.createPaymentRequest(
+        amount: widget.totalPrice,
+        orderId: orderId,
+        orderInfo: orderInfo,
+        extraData: extraData,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+
+      if (result['success'] == true) {
+        try {
+          // Tạo PaymentHistory với status 'pending' và lưu thông tin booking
+          final paymentHistoryRef = await _firestore
+              .collection('PaymentHistory')
+              .add({
+            'paymentMethod': 'momo',
+            'amount': widget.totalPrice,
+            'status': 'pending',
+            'orderId': orderId,
+            'bookingCreated': false,
+            'userEmail': widget.userEmail,
+            'hotelId': widget.hotelId,
+            'roomId': widget.roomId,
+            'roomDocId': widget.roomDocId,
+            'numberOfDays': widget.numberOfDays,
+            'numberOfRooms': widget.numberOfRooms,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+
+          final paymentHistoryId = paymentHistoryRef.id;
+          _paymentHistoryId = paymentHistoryId;
+          _startPaymentMonitoring(paymentHistoryId);
+
+          // Hiển thị thông báo chờ thanh toán
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Đã mở ứng dụng MoMo. Vui lòng hoàn tất thanh toán.'),
+                backgroundColor: Colors.blue,
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+
+          // Lưu paymentHistoryId để xử lý callback
+          // Note: Trong thực tế, bạn cần xử lý deep link callback từ MoMo app
+          // và cập nhật status trong Firestore khi thanh toán thành công
+        } catch (e) {
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Row(
+                    children: [
+                      Icon(Icons.error, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Lỗi lưu thông tin'),
+                    ],
+                  ),
+                  content: Text('Không thể lưu thông tin thanh toán: ${e.toString()}'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Đóng'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
+        }
+      } else {
+        if (mounted) {
+          final errorMessage = result['error'] ?? 'Lỗi khi tạo yêu cầu thanh toán';
+          // Hiển thị dialog lỗi thay vì SnackBar để user dễ đọc hơn
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Row(
+                  children: [
+                    Icon(Icons.error, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Lỗi thanh toán'),
+                  ],
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(errorMessage),
+                    if (result['payUrl'] != null) ...[
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Bạn có thể thử mở link sau trong trình duyệt:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      SelectableText(
+                        result['payUrl'],
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Đóng'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+        // Hiển thị dialog lỗi thay vì SnackBar
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.error, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Lỗi thanh toán'),
+                ],
+              ),
+              content: Text(
+                'Lỗi thanh toán MoMo: ${e.toString()}\n\n'
+                'Vui lòng thử lại sau hoặc liên hệ hỗ trợ.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Đóng'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
+
   void _startPaymentMonitoring(String paymentHistoryId) {
     // Cancel existing subscription if any
     _paymentSubscription?.cancel();
@@ -113,7 +357,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         .collection('PaymentHistory')
         .doc(paymentHistoryId)
         .snapshots()
-        .listen((snapshot) {
+        .listen((snapshot) async {
       if (!mounted || _paymentSuccessDialogShown) return;
       
       if (snapshot.exists) {
@@ -124,6 +368,32 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         if (status == 'confirmed' || status == 'success') {
           _paymentSuccessDialogShown = true;
           _paymentSubscription?.cancel();
+          
+          // Kiểm tra xem đã tạo booking chưa
+          final bookingCreated = data?['bookingCreated'] as bool? ?? false;
+          
+          if (!bookingCreated) {
+            // Tạo booking nếu chưa tạo
+            try {
+              await _processPayment();
+              // Đánh dấu đã tạo booking
+              await _firestore
+                  .collection('PaymentHistory')
+                  .doc(paymentHistoryId)
+                  .update({'bookingCreated': true});
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Lỗi khi tạo booking: ${e.toString()}'),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            }
+          }
+          
           // Delay slightly to ensure all data is saved
           Future.delayed(const Duration(milliseconds: 500), () {
             if (mounted) {
@@ -343,6 +613,55 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Wrap trong Builder để catch lỗi build-time
+    return Builder(
+      builder: (context) {
+        try {
+          return _buildPaymentScreen(context);
+        } catch (e, stackTrace) {
+          // Hiển thị error screen nếu có lỗi
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Lỗi'),
+              backgroundColor: Colors.red,
+            ),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Đã xảy ra lỗi khi tải màn hình',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      e.toString(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Quay lại'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildPaymentScreen(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -450,90 +769,68 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
 
               const SizedBox(height: 32),
 
-              // Show QR Code or Payment Button
-              if (!_showQRCode)
-                // Initial button to show QR code
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _showQRCodeScreen,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1E3A8A),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
+              // Payment Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _isProcessing ? null : _confirmPayment,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey[300],
+                    disabledForegroundColor: Colors.grey[600],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Text(
-                      'Hiển thị QR code thanh toán',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                    elevation: 0,
+                  ),
+                  child: _isProcessing
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Text(
+                          'Thanh toán',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ),
+              
+              // Hiển thị nút xác nhận thanh toán thủ công nếu có payment đang pending
+              if (_paymentHistoryId != null && _selectedPaymentMethod == 'momo')
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: _isProcessing ? null : _manualConfirmPayment,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                        side: const BorderSide(color: Colors.blue),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Đã thanh toán trên MoMo - Xác nhận',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
-                )
-              else
-                // QR Code Display Section
-                Column(
-                  children: [
-                    const SizedBox(height: 24),
-                    // Confirm Payment Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _isProcessing ? null : _confirmPayment,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: Colors.grey[300],
-                          disabledForegroundColor: Colors.grey[600],
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _isProcessing
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                ),
-                              )
-                            : const Text(
-                                'Thanh toán',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Back button
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _showQRCode = false;
-                        });
-                      },
-                      child: const Text(
-                        'Quay lại',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
             ],
           ),
