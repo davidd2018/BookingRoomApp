@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'momo_payment_service.dart';
+import 'paypal_payment_service.dart';
 
 class PaymentMethodScreen extends StatefulWidget {
   final String userEmail;
@@ -83,9 +83,9 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       return;
     }
 
-    // Nếu chọn MoMo, gọi MoMo Payment API
-    if (_selectedPaymentMethod == 'momo') {
-      await _processMoMoPayment();
+    // Nếu chọn PayPal, gọi PayPal Payment API
+    if (_selectedPaymentMethod == 'paypal') {
+      await _processPayPalPayment();
       return;
     }
 
@@ -176,7 +176,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     }
   }
 
-  Future<void> _processMoMoPayment() async {
+  Future<void> _processPayPalPayment() async {
     setState(() {
       _isProcessing = true;
     });
@@ -187,8 +187,8 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       final orderInfo = 'Thanh toán đặt phòng ${widget.roomId} - ${widget.numberOfRooms} phòng x ${widget.numberOfDays} ngày';
       final extraData = '';
 
-      // Gọi MoMo Payment API
-      final result = await MoMoPaymentService.createPaymentRequest(
+      // Gọi PayPal Payment API
+      final result = await PayPalPaymentService.createPaymentRequest(
         amount: widget.totalPrice,
         orderId: orderId,
         orderInfo: orderInfo,
@@ -207,10 +207,11 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
           final paymentHistoryRef = await _firestore
               .collection('PaymentHistory')
               .add({
-            'paymentMethod': 'momo',
+            'paymentMethod': 'paypal',
             'amount': widget.totalPrice,
             'status': 'pending',
             'orderId': orderId,
+            'paypalOrderId': result['paypalOrderId'],
             'bookingCreated': false,
             'userEmail': widget.userEmail,
             'hotelId': widget.hotelId,
@@ -229,7 +230,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Đã mở ứng dụng MoMo. Vui lòng hoàn tất thanh toán.'),
+                content: Text('Đã mở PayPal checkout. Vui lòng hoàn tất thanh toán.'),
                 backgroundColor: Colors.blue,
                 behavior: SnackBarBehavior.floating,
                 duration: Duration(seconds: 3),
@@ -238,7 +239,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
           }
 
           // Lưu paymentHistoryId để xử lý callback
-          // Note: Trong thực tế, bạn cần xử lý deep link callback từ MoMo app
+          // Note: Trong thực tế, bạn cần xử lý deep link callback từ PayPal
           // và cập nhật status trong Firestore khi thanh toán thành công
         } catch (e) {
           if (mounted) {
@@ -331,7 +332,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                 ],
               ),
               content: Text(
-                'Lỗi thanh toán MoMo: ${e.toString()}\n\n'
+                'Lỗi thanh toán PayPal: ${e.toString()}\n\n'
                 'Vui lòng thử lại sau hoặc liên hệ hỗ trợ.',
               ),
               actions: [
@@ -762,9 +763,9 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
               const SizedBox(height: 16),
 
               _buildPaymentOption(
-                'MoMo',
-                'lib/assets/images/momo/logo512.webp',
-                'momo',
+                'PayPal',
+                'lib/assets/images/paypal/paypal-3384015_640 (1).webp',
+                'paypal',
               ),
 
               const SizedBox(height: 32),
@@ -807,7 +808,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
               ),
               
               // Hiển thị nút xác nhận thanh toán thủ công nếu có payment đang pending
-              if (_paymentHistoryId != null && _selectedPaymentMethod == 'momo')
+              if (_paymentHistoryId != null && _selectedPaymentMethod == 'paypal')
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: SizedBox(
@@ -823,7 +824,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                         ),
                       ),
                       child: const Text(
-                        'Đã thanh toán trên MoMo - Xác nhận',
+                        'Đã thanh toán trên PayPal - Xác nhận',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
