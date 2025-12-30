@@ -5,8 +5,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 class PayPalPaymentService {
   // PayPal Sandbox credentials
-  static const String clientId = 'AXFcFS5Omgre7X658w0i6ExtahqHByEINev_bYtcp-HHqW-SJ7SIqJ_CdpH6STvbRKQLgpFJYCePrJLh';
-  static const String secretKey = 'EJcZfmPybxCbxTKBUquzdejXawVV2kH22M87ideTH-BdLjPiettsc39-fdWoJYSF6H9AZYoZ_QuBex-z';
+  static const String clientId = '';
+  static const String secretKey = '';
   
   // PayPal Sandbox endpoints
   static const String baseUrl = 'https://api.sandbox.paypal.com';
