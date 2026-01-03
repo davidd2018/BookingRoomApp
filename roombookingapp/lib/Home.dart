@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'Hotels.dart';
+import 'History.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,9 +17,24 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-
         backgroundColor: const Color(0xFF1E3A8A),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.history,
+            color: Colors.white,
+            size: 28,
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const HistoryScreen(),
+              ),
+            );
+          },
+          tooltip: 'Lịch sử đặt phòng',
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(

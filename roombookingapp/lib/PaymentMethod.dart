@@ -374,14 +374,9 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
           final bookingCreated = data?['bookingCreated'] as bool? ?? false;
           
           if (!bookingCreated) {
-            // Tạo booking nếu chưa tạo
+            // Tạo booking nếu chưa tạo - truyền paymentHistoryId để sử dụng PaymentHistory đã có
             try {
-              await _processPayment();
-              // Đánh dấu đã tạo booking
-              await _firestore
-                  .collection('PaymentHistory')
-                  .doc(paymentHistoryId)
-                  .update({'bookingCreated': true});
+              await _processPayment(existingPaymentHistoryId: paymentHistoryId);
             } catch (e) {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -487,12 +482,56 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     );
   }
 
-  Future<void> _processPayment() async {
-
+  Future<void> _processPayment({String? existingPaymentHistoryId}) async {
     try {
       final now = DateTime.now();
       final checkInDate = now;
       final checkOutDate = now.add(Duration(days: widget.numberOfDays));
+
+      String paymentHistoryId;
+      String? orderId;
+      String? paypalOrderId;
+      String paymentMethod = _selectedPaymentMethod ?? 'unknown';
+
+      // Nếu đã có PaymentHistory (từ PayPal), sử dụng nó
+      if (existingPaymentHistoryId != null) {
+        paymentHistoryId = existingPaymentHistoryId;
+        // Lấy thông tin từ PaymentHistory hiện có
+        final paymentDoc = await _firestore
+            .collection('PaymentHistory')
+            .doc(paymentHistoryId)
+            .get();
+        if (paymentDoc.exists) {
+          final paymentData = paymentDoc.data() as Map<String, dynamic>?;
+          orderId = paymentData?['orderId'] as String?;
+          paypalOrderId = paymentData?['paypalOrderId'] as String?;
+          paymentMethod = paymentData?['paymentMethod'] as String? ?? paymentMethod;
+        }
+      } else {
+        // Tạo PaymentHistory mới cho các phương thức thanh toán khác
+        // Lưu ý: Với các phương thức thanh toán không phải PayPal, 
+        // chúng ta xử lý ngay nên không cần monitoring
+        orderId = 'ORDER_${DateTime.now().millisecondsSinceEpoch}';
+        final paymentHistoryRef = await _firestore
+            .collection('PaymentHistory')
+            .add({
+          'paymentMethod': paymentMethod,
+          'amount': widget.totalPrice,
+          'status': 'confirmed', // Đã xác nhận ngay vì user đã confirm
+          'orderId': orderId,
+          'userEmail': widget.userEmail,
+          'hotelId': widget.hotelId,
+          'roomId': widget.roomId,
+          'roomDocId': widget.roomDocId,
+          'numberOfDays': widget.numberOfDays,
+          'numberOfRooms': widget.numberOfRooms,
+          'bookingCreated': true, // Đánh dấu sẽ được tạo ngay
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        paymentHistoryId = paymentHistoryRef.id;
+        _paymentHistoryId = paymentHistoryId;
+        // Không gọi _startPaymentMonitoring() vì đã xử lý xong
+      }
 
       // 1. Tạo BookingDetail trong Rooms/{hotelId}/Rooms/{roomDocId}/BookingDetail
       final bookingDetailRef = await _firestore
@@ -528,23 +567,42 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // 3. Tạo PaymentHistory với status 'pending'
-      final paymentHistoryRef = await _firestore
+      // 3. Cập nhật PaymentHistory với thông tin đầy đủ và status 'confirmed'
+      await _firestore
           .collection('PaymentHistory')
-          .add({
-        'paymentMethod': _selectedPaymentMethod,
+          .doc(paymentHistoryId)
+          .update({
+        'status': 'confirmed',
+        'bookingCreated': true,
+        'userEmail': widget.userEmail,
+        'hotelId': widget.hotelId,
+        'roomId': widget.roomId,
+        'roomDocId': widget.roomDocId,
+        'numberOfDays': widget.numberOfDays,
+        'numberOfRooms': widget.numberOfRooms,
+      });
+
+      // 4. Tạo OrderHistory - Lưu thông tin đặt phòng với userEmail
+      await _firestore.collection('OrderHistory').add({
+        'userEmail': widget.userEmail.toLowerCase(),
+        'paymentHistoryId': paymentHistoryId,
+        'bookingDetailId': bookingDetailId,
+        'orderId': orderId ?? 'ORDER_${DateTime.now().millisecondsSinceEpoch}',
+        'paypalOrderId': paypalOrderId,
+        'paymentMethod': paymentMethod,
         'amount': widget.totalPrice,
-        'status': 'pending', // Initial status
+        'status': 'confirmed',
+        'hotelId': widget.hotelId,
+        'roomId': widget.roomId,
+        'roomDocId': widget.roomDocId,
+        'numberOfDays': widget.numberOfDays,
+        'numberOfRooms': widget.numberOfRooms,
+        'checkInDate': Timestamp.fromDate(checkInDate),
+        'checkOutDate': Timestamp.fromDate(checkOutDate),
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      final paymentHistoryId = paymentHistoryRef.id;
-      
-      // Start monitoring payment status
-      _paymentHistoryId = paymentHistoryId;
-      _startPaymentMonitoring(paymentHistoryId);
-
-      // 4. Tạo PayRoom_Detail
+      // 5. Tạo PayRoom_Detail
       await _firestore.collection('PayRoom_Detail').add({
         'DeteID': bookingDetailId,
         'PaymentDeteID': paymentHistoryId,
@@ -552,7 +610,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      // 5. Tạo History trong Users/{email}/History
+      // 6. Tạo History trong Users/{email}/History
       await _firestore
           .collection('Users')
           .where('email', isEqualTo: widget.userEmail.toLowerCase())
@@ -568,7 +626,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
             'PaymentDeteID': paymentHistoryId,
             'DeteID': bookingDetailId,
             'Date of payment': Timestamp.fromDate(now),
-            'paymentMethod': _selectedPaymentMethod,
+            'paymentMethod': paymentMethod,
             'amount': widget.totalPrice,
             'roomId': widget.roomId,
             'hotelId': widget.hotelId,
@@ -577,7 +635,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         }
       });
 
-      // 6. Cập nhật trạng thái phòng thành "booked"
+      // 7. Cập nhật trạng thái phòng thành "booked"
       await _firestore
           .collection('Hotels')
           .doc(widget.hotelId)
@@ -587,17 +645,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
         'roomstatus': 'booked',
       });
 
-      // 7. Cập nhật trạng thái thanh toán thành 'confirmed'
-      // Điều này sẽ trigger StreamBuilder và hiển thị dialog thành công
-      await _firestore
-          .collection('PaymentHistory')
-          .doc(paymentHistoryId)
-          .update({
-        'status': 'confirmed',
-      });
-
       // Thành công - Dialog sẽ được hiển thị tự động bởi _startPaymentMonitoring
-      // Không cần hiển thị SnackBar ở đây nữa vì đã có dialog
     } catch (e) {
       _paymentSubscription?.cancel();
       if (mounted) {
@@ -609,6 +657,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
           ),
         );
       }
+      rethrow;
     }
   }
 

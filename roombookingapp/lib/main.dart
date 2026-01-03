@@ -10,6 +10,7 @@ import 'Home.dart';
 import 'init_locations.dart';
 import 'init_hotels.dart';
 import 'user_session.dart';
+import 'forgotpw.dart';
 
 
 void main() async {
@@ -260,7 +261,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 20),
                       // Welcome back title
                       const Text(
-                        'Welcome back',
+                        'App Booking Room ',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -359,21 +360,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-
-                          // Forgot password link
-                          TextButton(
-                            onPressed: () {
-                              // Handle forgot password
-                            },
-                            child: const Text(
-                              'Forgot password?',
-                              style: TextStyle(
-                                color: Color(0xFF1E3A8A),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 32),
@@ -405,7 +391,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 )
                               : const Text(
-                                  'Sign in',
+                                  'Đăng nhập',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
@@ -417,6 +403,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Sign up button
                       Center(
                         child: TextButton(
+
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -425,13 +412,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             );
                           },
-
                           child: const Text(
-                            'Sign up ',
+                            'Không có tài khoản? Đăng ký ngay',
                             style: TextStyle(
                               color: Color(0xFF1E3A8A),
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
+
                             ),
                           ),
                         ),
