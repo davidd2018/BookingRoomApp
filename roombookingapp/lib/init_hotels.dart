@@ -38,7 +38,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/caravelle_101.jpg
-              'imgurl': 'images/caravelle_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'CAR-102',
@@ -46,7 +46,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/caravelle_102.jpg
-              'imgurl': 'images/caravelle_102.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'CAR-201',
@@ -54,7 +54,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/caravelle_201.jpg
-              'imgurl': 'images/caravelle_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -69,7 +69,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/lavela_101.jpg
-              'imgurl': 'images/lavela_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'VEL-102',
@@ -77,7 +77,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/lavela_102.jpg
-              'imgurl': 'images/lavela_102.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'VEL-301',
@@ -85,7 +85,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'booked',
               // TODO: Chèn ảnh phòng vào lib/assets/images/lavela_301.jpg
-              'imgurl': 'images/lavela_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -100,7 +100,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/maihouse_101.jpg
-              'imgurl': 'images/maihouse_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'MAI-201',
@@ -108,7 +108,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/maihouse_201.jpg
-              'imgurl': 'images/maihouse_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'MAI-301',
@@ -116,7 +116,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/maihouse_301.jpg
-              'imgurl': 'images/maihouse_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -133,7 +133,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/vias_101.jpg
-              'imgurl': 'images/vias_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'VIA-102',
@@ -141,7 +141,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/vias_102.jpg
-              'imgurl': 'images/vias_102.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'VIA-201',
@@ -149,7 +149,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'booked',
               // TODO: Chèn ảnh phòng vào lib/assets/images/vias_201.jpg
-              'imgurl': 'images/vias_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -164,7 +164,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/imperial_101.jpg
-              'imgurl': 'images/imperial_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'IMP-201',
@@ -172,7 +172,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/imperial_201.jpg
-              'imgurl': 'images/imperial_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'IMP-301',
@@ -180,7 +180,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/imperial_301.jpg
-              'imgurl': 'images/imperial_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -195,7 +195,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/lacasa_101.jpg
-              'imgurl': 'images/lacasa_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'CAS-102',
@@ -203,7 +203,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/lacasa_102.jpg
-              'imgurl': 'images/lacasa_102.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'CAS-201',
@@ -211,7 +211,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'booked',
               // TODO: Chèn ảnh phòng vào lib/assets/images/lacasa_201.jpg
-              'imgurl': 'images/lacasa_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -228,7 +228,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/colline_101.jpg
-              'imgurl': 'images/colline_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'COL-201',
@@ -236,7 +236,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/colline_201.jpg
-              'imgurl': 'images/colline_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'COL-301',
@@ -244,7 +244,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/colline_301.jpg
-              'imgurl': 'images/colline_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -259,7 +259,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/swiss_101.jpg
-              'imgurl': 'images/swiss_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'SWI-201',
@@ -267,7 +267,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/swiss_201.jpg
-              'imgurl': 'images/swiss_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'SWI-301',
@@ -275,7 +275,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'booked',
               // TODO: Chèn ảnh phòng vào lib/assets/images/swiss_301.jpg
-              'imgurl': 'images/swiss_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -290,7 +290,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/terracotta_101.jpg
-              'imgurl': 'images/terracotta_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'TER-201',
@@ -298,7 +298,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/terracotta_201.jpg
-              'imgurl': 'images/terracotta_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'TER-301',
@@ -306,7 +306,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/terracotta_301.jpg
-              'imgurl': 'images/terracotta_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -323,7 +323,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/jwmarriott_101.jpg
-              'imgurl': 'images/jwmarriott_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'JWM-201',
@@ -331,7 +331,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/jwmarriott_201.jpg
-              'imgurl': 'images/jwmarriott_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'JWM-301',
@@ -339,7 +339,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/jwmarriott_301.jpg
-              'imgurl': 'images/jwmarriott_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -354,7 +354,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/sofitel_101.jpg
-              'imgurl': 'images/sofitel_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'SOF-201',
@@ -362,7 +362,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/sofitel_201.jpg
-              'imgurl': 'images/sofitel_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'SOF-301',
@@ -370,7 +370,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'booked',
               // TODO: Chèn ảnh phòng vào lib/assets/images/sofitel_301.jpg
-              'imgurl': 'images/sofitel_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -385,7 +385,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/lotte_101.jpg
-              'imgurl': 'images/lotte_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'LOT-201',
@@ -393,7 +393,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/lotte_201.jpg
-              'imgurl': 'images/lotte_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'LOT-301',
@@ -401,7 +401,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/lotte_301.jpg
-              'imgurl': 'images/lotte_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -418,7 +418,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/sunrise_101.jpg
-              'imgurl': 'images/sunrise_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'SUN-201',
@@ -426,7 +426,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/sunrise_201.jpg
-              'imgurl': 'images/sunrise_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'SUN-301',
@@ -434,7 +434,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/sunrise_301.jpg
-              'imgurl': 'images/sunrise_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -449,7 +449,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/sheraton_101.jpg
-              'imgurl': 'images/sheraton_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'SHE-201',
@@ -457,7 +457,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/sheraton_201.jpg
-              'imgurl': 'images/sheraton_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'SHE-301',
@@ -465,7 +465,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'booked',
               // TODO: Chèn ảnh phòng vào lib/assets/images/sheraton_301.jpg
-              'imgurl': 'images/sheraton_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },
@@ -480,7 +480,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 2,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/muongthanh_101.jpg
-              'imgurl': 'images/muongthanh_101.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'MUO-201',
@@ -488,7 +488,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 3,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/muongthanh_201.jpg
-              'imgurl': 'images/muongthanh_201.jpg',
+              'imgurl': 'images/download.jpg',
             },
             {
               'roomCode': 'MUO-301',
@@ -496,7 +496,7 @@ Future<void> initializeHotelsAndRooms() async {
               'maxGuest': 4,
               'roomStatus': 'available',
               // TODO: Chèn ảnh phòng vào lib/assets/images/muongthanh_301.jpg
-              'imgurl': 'images/muongthanh_301.jpg',
+              'imgurl': 'images/download.jpg',
             },
           ],
         },

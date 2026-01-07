@@ -35,6 +35,8 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
   String? _paymentHistoryId; // Track payment history ID for monitoring
   StreamSubscription<DocumentSnapshot>? _paymentSubscription; // Monitor payment status
   bool _paymentSuccessDialogShown = false; // Prevent multiple dialogs
+  String? _paymentStatus; // Track current payment status
+  String? _paypalOrderId; // Track PayPal order ID
 
   @override
   void initState() {
@@ -57,6 +59,9 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       if (pendingPayments.docs.isNotEmpty) {
         final paymentDoc = pendingPayments.docs.first;
         _paymentHistoryId = paymentDoc.id;
+        final paymentData = paymentDoc.data() as Map<String, dynamic>?;
+        _paymentStatus = paymentData?['status'] as String?;
+        _paypalOrderId = paymentData?['paypalOrderId'] as String?;
         _startPaymentMonitoring(paymentDoc.id);
       }
     } catch (e) {
@@ -143,34 +148,164 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
     });
 
     try {
+      // Lấy thông tin PaymentHistory để lấy paypalOrderId
+      final paymentDoc = await _firestore
+          .collection('PaymentHistory')
+          .doc(_paymentHistoryId)
+          .get();
+
+      if (!paymentDoc.exists) {
+        throw Exception('Không tìm thấy thông tin thanh toán');
+      }
+
+      final paymentData = paymentDoc.data() as Map<String, dynamic>?;
+      final paypalOrderId = paymentData?['paypalOrderId'] as String?;
+
+      if (paypalOrderId == null || paypalOrderId.isEmpty) {
+        throw Exception('Không tìm thấy PayPal Order ID. Vui lòng thử lại từ đầu.');
+      }
+
+      // Kiểm tra trạng thái order từ PayPal
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đang kiểm tra trạng thái thanh toán với PayPal...'),
+            backgroundColor: Colors.blue,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+
+      // Lấy thông tin order từ PayPal
+      final orderDetails = await PayPalPaymentService.getOrderDetails(paypalOrderId);
+
+      if (!orderDetails['success']) {
+        throw Exception(
+          'Không thể kiểm tra trạng thái thanh toán: ${orderDetails['error'] ?? 'Lỗi không xác định'}',
+        );
+      }
+
+      final order = orderDetails['order'] as Map<String, dynamic>?;
+      final orderStatus = order?['status'] as String?;
+
+      // Kiểm tra nếu order đã được approve
+      if (orderStatus != 'APPROVED' && orderStatus != 'COMPLETED') {
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+          });
+          
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.orange),
+                    SizedBox(width: 8),
+                    Text('Thanh toán chưa hoàn tất'),
+                  ],
+                ),
+                content: Text(
+                  'PayPal order hiện tại có trạng thái: $orderStatus\n\n'
+                  'Vui lòng hoàn tất thanh toán trên PayPal trước khi xác nhận.\n\n'
+                  'Nếu bạn đã thanh toán, vui lòng đợi vài giây để hệ thống cập nhật.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Đóng'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
+        return;
+      }
+
+      // Nếu order đã APPROVED nhưng chưa COMPLETED, cần capture payment
+      if (orderStatus == 'APPROVED') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Đang xác nhận thanh toán với PayPal...'),
+              backgroundColor: Colors.blue,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+
+        // Capture payment từ PayPal
+        final captureResult = await PayPalPaymentService.capturePayment(paypalOrderId);
+
+        if (!captureResult['success']) {
+          throw Exception(
+            'Không thể xác nhận thanh toán với PayPal: ${captureResult['error'] ?? 'Lỗi không xác định'}\n\n'
+            'Vui lòng đảm bảo bạn đã hoàn tất thanh toán trên PayPal.',
+          );
+        }
+
+        final captureStatus = captureResult['status'] as String?;
+        if (captureStatus != 'COMPLETED') {
+          throw Exception(
+            'Thanh toán chưa được hoàn tất. Trạng thái: $captureStatus\n\n'
+            'Vui lòng hoàn tất thanh toán trên PayPal trước khi xác nhận.',
+          );
+        }
+      }
+
+      // Nếu đến đây, thanh toán đã được xác nhận thành công từ PayPal
       // Cập nhật trạng thái thanh toán thành 'confirmed'
       await _firestore
           .collection('PaymentHistory')
           .doc(_paymentHistoryId)
           .update({
         'status': 'confirmed',
+        'paypalVerified': true, // Đánh dấu đã được xác minh từ PayPal
+        'verifiedAt': FieldValue.serverTimestamp(),
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Đang xử lý thanh toán...'),
-            backgroundColor: Colors.blue,
+            content: Text('Đã xác nhận thanh toán thành công! Đang tạo booking...'),
+            backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
+
+      // Payment monitoring sẽ tự động tạo booking khi phát hiện status = 'confirmed'
+      // Không cần gọi _processPayment() ở đây vì monitoring sẽ xử lý
     } catch (e) {
       if (mounted) {
         setState(() {
           _isProcessing = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
+        
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.error, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Lỗi xác nhận thanh toán'),
+                ],
+              ),
+              content: Text(
+                e.toString().replaceAll('Exception: ', ''),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Đóng'),
+                ),
+              ],
+            );
+          },
         );
       }
     }
@@ -224,6 +359,8 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
 
           final paymentHistoryId = paymentHistoryRef.id;
           _paymentHistoryId = paymentHistoryId;
+          _paymentStatus = 'pending';
+          _paypalOrderId = result['paypalOrderId'];
           _startPaymentMonitoring(paymentHistoryId);
 
           // Hiển thị thông báo chờ thanh toán
@@ -364,6 +501,13 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
       if (snapshot.exists) {
         final data = snapshot.data();
         final status = data?['status'] as String?;
+        
+        // Update payment status in state
+        if (mounted) {
+          setState(() {
+            _paymentStatus = status;
+          });
+        }
         
         // Check if payment is confirmed
         if (status == 'confirmed' || status == 'success') {
@@ -857,7 +1001,12 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
               ),
               
               // Hiển thị nút xác nhận thanh toán thủ công nếu có payment đang pending
-              if (_paymentHistoryId != null && _selectedPaymentMethod == 'paypal')
+              // Chỉ hiển thị khi: có paymentHistoryId, đã chọn PayPal, status là 'pending', và có paypalOrderId
+              if (_paymentHistoryId != null && 
+                  _selectedPaymentMethod == 'paypal' && 
+                  _paymentStatus == 'pending' &&
+                  _paypalOrderId != null &&
+                  _paypalOrderId!.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: SizedBox(

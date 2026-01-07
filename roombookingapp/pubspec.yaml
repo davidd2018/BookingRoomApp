@@ -67,7 +67,7 @@ flutter:
     - lib/assets/images/momo/logo512.webp
     - lib/assets/images/vcb/z7376095976876_2257b3cb649d1e7c59ed9b144ed29878.jpg
     - lib/assets/images/paypal/paypal-3384015_640 (1).webp
-
+    - lib/assets/images/download.jpg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

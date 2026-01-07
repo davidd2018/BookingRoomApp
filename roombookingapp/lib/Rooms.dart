@@ -162,30 +162,28 @@ class _RoomsScreenState extends State<RoomsScreen> {
                                 width: 120,
                                 height: 120,
                                 color: Colors.grey[200],
-                                child: imgUrl.isNotEmpty
-                                    ? Image.asset(
-                                        imgUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return Container(
-                                            color: Colors.grey[300],
-                                            child: const Icon(
-                                              Icons.image_not_supported,
-                                              size: 40,
-                                              color: Colors.grey,
-                                            ),
-                                          );
-                                        },
-                                      )
-                                    : Container(
-                                        color: Colors.grey[300],
-                                        child: const Icon(
-                                          Icons.bed,
-                                          size: 40,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
+                                child: Image.asset(
+                                  imgUrl.isNotEmpty ? imgUrl : 'lib/assets/images/download.jpg',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    // Sử dụng download.jpg làm ảnh mặc định khi load lỗi
+                                    return Image.asset(
+                                      'lib/assets/images/download.jpg',
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        // Nếu download.jpg cũng không load được, hiển thị icon
+                                        return Container(
+                                          color: Colors.grey[300],
+                                          child: const Icon(
+                                            Icons.image_not_supported,
+                                            size: 40,
+                                            color: Colors.grey,
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                             const SizedBox(width: 16),
